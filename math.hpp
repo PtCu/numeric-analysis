@@ -1,12 +1,12 @@
 #include <eigen3/Eigen/Eigen>
 #include <map>
 #include <vector>
-#include<fstream>
+#include <fstream>
 using namespace Eigen;
 
 const int iter = 1000;
 const double tol = 1e-14;
-bool power_eng(const MatrixXd& a,double &pld,std::vector<double>& env)
+bool power_eng(const MatrixXd &a, double &pld, std::vector<double> &env)
 {
     MatrixXd A = MatrixXd(a);
     VectorXd u = VectorXd::Random(a.rows());
@@ -16,32 +16,34 @@ bool power_eng(const MatrixXd& a,double &pld,std::vector<double>& env)
         v = u / u.lpNorm<Infinity>();
         u = A * v;
     }
-    for(size_t i=0;i<v.size();++i){
+    for (size_t i = 0; i < v.size(); ++i)
+    {
         env.push_back(v(i));
     }
     //env = v;
     pld = u.lpNorm<Infinity>();
 }
 
-bool inv_power_eng(const MatrixXd &a, std::vector<double>& env, double &pld)
+bool inv_power_eng(const MatrixXd &a, std::vector<double> &env, double &pld)
 {
     MatrixXd A = MatrixXd(a);
     VectorXd u = VectorXd::Random(a.rows());
     VectorXd v = VectorXd(u);
     for (size_t j = 1; j <= iter; ++j)
     {
-        v = u /  u.lpNorm<Infinity>();
+        v = u / u.lpNorm<Infinity>();
         u = A.inverse() * v;
     }
-     for(size_t i=0;i<v.size();++i){
+    for (size_t i = 0; i < v.size(); ++i)
+    {
         env.push_back(v(i));
     }
-    pld = u.maxCoeff();
+    pld = u.lpNorm<Infinity>();
 }
 
 //a：原矩阵
 //ev: 存放特征值
-bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
+bool jacobi_eng(const MatrixXd &a, std::vector<double> &ev)
 {
     MatrixXd A = MatrixXd(a);
     //pdbVec = MatrixXd::Identity(a.rows(),a.rows()); //存放特征向量
@@ -49,21 +51,23 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
     for (size_t num = 0; num < iter; ++num)
     {
         //在非对角线上找到绝对值最大的元素
-        MatrixXd::Index maxRow=0, maxCol=0;
+        MatrixXd::Index maxRow = 0, maxCol = 0;
         double _max = 0;
         for (size_t i = 0; i < A.rows(); ++i)
         {
-            for(size_t j=0;j<A.rows();++j){
-                if(i!=j&&abs(A(i,j))>_max){
-                        _max=abs(A(i,j));
-                        maxRow=i;
-                        maxCol = j;
-                    
+            for (size_t j = 0; j < A.rows(); ++j)
+            {
+                if (i != j && abs(A(i, j)) > _max)
+                {
+                    _max = abs(A(i, j));
+                    maxRow = i;
+                    maxCol = j;
                 }
             }
         }
-        if(_max<tol) break;
-       // double max = A.maxCoeff(&maxRow, &maxCol);
+        if (_max < tol)
+            break;
+        // double max = A.maxCoeff(&maxRow, &maxCol);
         double App = A(maxRow, maxRow);
         double Apq = A(maxRow, maxCol);
         double Aqq = A(maxCol, maxCol);
@@ -80,24 +84,24 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
         A(maxRow, maxCol) = 0.5 * (Aqq - App) * Sin2Theta + Apq * Cos2Theta;
         A(maxCol, maxRow) = A(maxRow, maxCol);
 
-       //eigen下标从0开始
+        //eigen下标从0开始
         for (size_t i = 0; i < A.cols(); ++i)
         {
             if ((i != maxRow) && (i != maxCol))
             {
-                double t1=A(i,maxRow);
-                double t2=A(i,maxCol);
-                A(i, maxRow) = CosTheta *t1 + SinTheta * t2;
-                A(i, maxCol) = -SinTheta * t1 + CosTheta *t2;
+                double t1 = A(i, maxRow);
+                double t2 = A(i, maxCol);
+                A(i, maxRow) = CosTheta * t1 + SinTheta * t2;
+                A(i, maxCol) = -SinTheta * t1 + CosTheta * t2;
             }
         }
- 
+
         for (size_t i = 0; i < A.cols(); ++i)
         {
             if ((i != maxRow) && (i != maxCol))
             {
-                double t1=A(maxRow,i);
-                double t2=A(maxCol,i);
+                double t1 = A(maxRow, i);
+                double t2 = A(maxCol, i);
                 A(maxRow, i) = CosTheta * t1 + SinTheta * t2;
                 A(maxCol, i) = -SinTheta * t1 + CosTheta * t2;
             }
@@ -109,18 +113,15 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
         //     pdbVec(i, maxCol) = -pdbVec(i, maxCol) * SinTheta + pdbVec(i, maxRow) * CosTheta;
         // }
     }
-    
 
     for (size_t i = 0; i < A.cols(); ++i)
     {
         ev[i] = A(i, i);
     }
-   
 }
 
-
 //无移动qr
-bool unshifted_qr(const MatrixXd &a, std::vector<double>& ev)
+bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
 {
     ev.resize(a.cols());
     MatrixXd Q = MatrixXd::Identity(a.cols(), a.cols());
@@ -148,14 +149,13 @@ bool unshifted_qr(const MatrixXd &a, std::vector<double>& ev)
 
 //平移QR法
 
-
 //平移QR法
 //计算方阵的实数和复数特征值
-bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>>& ev)
+bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
 {
 
     ev.resize(a.cols());
-   
+
     int kounttol = 500;
     //行数
     int m = a.rows();
@@ -165,77 +165,80 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>>& ev)
     while (n > 1)
     {
         int kount = 0;
-        double _max=0;
+        double _max = 0;
         //第n行最大的元素
-        for(size_t i=0;i<=n-2;++i){
-            if(abs(A(n-1,i))>_max){
-                _max=abs(A(n-1,i));
+        for (size_t i = 0; i <= n - 2; ++i)
+        {
+            if (abs(A(n - 1, i)) > _max)
+            {
+                _max = abs(A(n - 1, i));
             }
         }
         // auto _A = A.block(n - 1, 0, 1, n - 1).cwiseAbs().maxCoeff();
-        while ((kount < kounttol) && _max>tol)
+        while ((kount < kounttol) && _max > tol)
         {
             //记录QR的个数
             kount++;
-            auto mu = A(n-1, n-1);
+            auto mu = A(n - 1, n - 1);
             //QR分解
             qr.compute(A - mu * MatrixXcd::Identity(n, n));
             MatrixXcd R = qr.matrixQR().triangularView<Eigen::Upper>();
             MatrixXcd Q = qr.householderQ();
             A = R * Q + mu * MatrixXcd::Identity(n, n);
-                double _max=0;
-               //第n行最大的元素
-        for(size_t i=0;i<=n-2;++i){
-            if(abs(A(n-1,i))>_max){
-                _max=abs(A(n-1,i));
+            double _max = 0;
+            //第n行最大的元素
+            for (size_t i = 0; i <= n - 2; ++i)
+            {
+                if (abs(A(n - 1, i)) > _max)
+                {
+                    _max = abs(A(n - 1, i));
+                }
             }
-        }
         }
         if (kount < kounttol)
         {
-            ev[n-1] = a(n-1, n-1);
+            ev[n - 1] = a(n - 1, n - 1);
             --n;
             A = A.block(0, 0, n, n).eval();
-           
         }
         else
         {
-            std::complex<double> disc = (A(n - 2, n - 2) - A(n-1, n-1)) * (A(n - 2, n - 2) - A(n-1, n-1)) + 4.0 * (A(n-1, n - 2)* A(n - 2, n-1));
-            ev[n-1] =0.5*(A(n - 2, n - 2) + A(n-1, n-1) + sqrt(disc));
-            ev[n - 2] =0.5* (A(n - 2, n - 2) + A(n-1, n-1) - sqrt(disc)) ;
+            std::complex<double> disc = (A(n - 2, n - 2) - A(n - 1, n - 1)) * (A(n - 2, n - 2) - A(n - 1, n - 1)) + 4.0 * (A(n - 1, n - 2) * A(n - 2, n - 1));
+            ev[n - 1] = 0.5 * (A(n - 2, n - 2) + A(n - 1, n - 1) + sqrt(disc));
+            ev[n - 2] = 0.5 * (A(n - 2, n - 2) + A(n - 1, n - 1) - sqrt(disc));
             n -= 2;
-            A= A.block(0, 0, n, n).eval();   
-           
+            A = A.block(0, 0, n, n).eval();
         }
     }
     if (n > 0)
         ev[0] = A(0, 0);
-
 }
 
-
 //高斯-海森伯格
-void gauss_hessen(MatrixXd & a){
+void gauss_hessen(MatrixXd &a)
+{
 
     //从第二列开始，到倒数第二行结束
-    for(size_t i=1;i<a.rows()-1;++i)
-    { 
-       MatrixXd G=MatrixXd::Identity(a.rows(),a.rows());
-       MatrixXd G_=MatrixXd::Identity(a.rows(),a.rows());
-       for(size_t k=i;k<a.rows();++k){
-           if(a(k,k-1)!=0){
-               //保证a(i,i-1)不为0
-               a.row(k).swap(a.row(i));
-               break;
-            }}
-       //构造矩阵G
-       for (size_t j = i + 1; j < a.rows(); ++j)
-       {
-           //计算a, b, c
-           G(i, j) = -a(j, i - 1) / a(i, i - 1);
-           G_(i, j) = -G(i, j);
-       }
-       a = G * a * G_;
+    for (size_t i = 1; i < a.rows() - 1; ++i)
+    {
+        MatrixXd G = MatrixXd::Identity(a.rows(), a.rows());
+        MatrixXd G_ = MatrixXd::Identity(a.rows(), a.rows());
+        for (size_t k = i; k < a.rows(); ++k)
+        {
+            if (a(k, k - 1) != 0)
+            {
+                //保证a(i,i-1)不为0
+                a.row(k).swap(a.row(i));
+                break;
+            }
+        }
+        //构造矩阵G
+        for (size_t j = i + 1; j < a.rows(); ++j)
+        {
+            //计算a, b, c
+            G(i, j) = -a(j, i - 1) / a(i, i - 1);
+            G_(i, j) = -G(i, j);
+        }
+        a = G * a * G_;
     }
-    
 }
