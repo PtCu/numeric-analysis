@@ -53,13 +53,12 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
         double _max = 0;
         for (size_t i = 0; i < A.rows(); ++i)
         {
-            for(size_t j=0;j<A.cols();++j){
-                if(i!=j){
-                    if(abs(A(i,j))>_max){
+            for(size_t j=0;j<A.rows();++j){
+                if(i!=j&&abs(A(i,j))>_max){
                         _max=abs(A(i,j));
                         maxRow=i;
                         maxCol = j;
-                    }
+                    
                 }
             }
         }
@@ -86,8 +85,10 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
         {
             if ((i != maxRow) && (i != maxCol))
             {
-                A(i, maxRow) = CosTheta * A(i, maxRow) + SinTheta * A(i, maxCol);
-                A(i, maxCol) = -SinTheta * A(i, maxRow) + CosTheta * A(i, maxCol);
+                double t1=A(i,maxRow);
+                double t2=A(i,maxCol);
+                A(i, maxRow) = CosTheta *t1 + SinTheta * t2;
+                A(i, maxCol) = -SinTheta * t1 + CosTheta *t2;
             }
         }
  
@@ -95,8 +96,10 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double>& ev)
         {
             if ((i != maxRow) && (i != maxCol))
             {
-                A(maxRow, i) = CosTheta * A(maxRow, i) + SinTheta * A(maxCol, i);
-                A(maxCol, i) = -SinTheta * A(maxRow, i) + CosTheta * A(maxCol, i);
+                double t1=A(maxRow,i);
+                double t2=A(maxCol,i);
+                A(maxRow, i) = CosTheta * t1 + SinTheta * t2;
+                A(maxCol, i) = -SinTheta * t1 + CosTheta * t2;
             }
         }
         // //计算特征向量

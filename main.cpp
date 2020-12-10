@@ -63,37 +63,6 @@ int main()
         }
     }
 
-    // EigenSolver<Matrix<double, 8, 8>> eiga(A);
-
-    // std::cout << "A的特征值:" << std::endl;
-    // std::cout << eiga.eigenvalues() << std::endl;
-    // std::cout << "A的特征向量:" << std::endl;
-    // std::cout << eiga.eigenvectors() << std::endl;
-
-    // EigenSolver<Matrix<double, 10, 10>> eigb(B);
-    // std::cout << "B的特征值:" << std::endl;
-    // std::cout << eigb.eigenvalues() << std::endl;
-    // std::cout << "B的特征向量:" << std::endl;
-    // std::cout << eigb.eigenvectors() << std::endl;
-
-    // EigenSolver<Matrix<double, 12, 12>> eigc(C);
-    // std::cout << "C的特征值:" << std::endl;
-    // std::cout << eigc.eigenvalues() << std::endl;
-    // std::cout << "C的特征向量:" << std::endl;
-    // std::cout << eigc.eigenvectors() << std::endl;
-
-    // EigenSolver<Matrix<double, 20, 20>> eigd(D);
-    // std::cout << "D的特征值:" << std::endl;
-    // std::cout << eigd.eigenvalues() << std::endl;
-    // std::cout << "D的特征向量:" << std::endl;
-    // std::cout << eigd.eigenvectors() << std::endl;
-
-    // EigenSolver<Matrix<double, 50, 50>> eige(E);
-    // std::cout << "E的特征值:" << std::endl;
-    // std::cout << eige.eigenvalues() << std::endl;
-    // std::cout << "E的特征向量:" << std::endl;
-    // std::cout << eige.eigenvectors() << std::endl;
-
     /*A*/
     //幂法
     double pld;
