@@ -1,7 +1,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <map>
 #include <vector>
-#include <fstream>
+
 using namespace Eigen;
 
 const int iter = 1000;
@@ -126,7 +126,7 @@ bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
     ev.resize(a.cols());
     MatrixXd Q = MatrixXd::Identity(a.cols(), a.cols());
     //Qbar为特征向量
-    MatrixXd Qbar = MatrixXd(Q);
+    //MatrixXd Qbar = MatrixXd(Q);
     MatrixXd R = a;
     HouseholderQR<MatrixXd> qr;
     for (size_t i = 0; i < iter; ++i)
@@ -136,7 +136,7 @@ bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
         R = qr.matrixQR().triangularView<Eigen::Upper>();
         Q = qr.householderQ();
         //迭代
-        Qbar = Qbar * Q;
+       // Qbar = Qbar * Q;
     }
     //特征值位于对角线上
     MatrixXd lam = R * Q;
@@ -215,30 +215,30 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
 }
 
 //高斯-海森伯格
-void gauss_hessen(MatrixXd &a)
+Matrix<double,Dynamic,Dynamic> gauss_hessen(const Matrix<double,Dynamic,Dynamic> &a)
 {
-
+    Matrix<double, Dynamic, Dynamic> A = a;
     //从第二列开始，到倒数第二行结束
-    for (size_t i = 1; i < a.rows() - 1; ++i)
+    for (size_t i = 1; i < A.rows() - 1; ++i)
     {
-        MatrixXd G = MatrixXd::Identity(a.rows(), a.rows());
-        MatrixXd G_ = MatrixXd::Identity(a.rows(), a.rows());
-        for (size_t k = i; k < a.rows(); ++k)
+        MatrixXd G = MatrixXd::Identity(A.rows(), A.rows());
+        MatrixXd G_ = MatrixXd::Identity(A.rows(), A.rows());
+        for (size_t k = i; k < A.rows(); ++k)
         {
             if (a(k, k - 1) != 0)
             {
                 //保证a(i,i-1)不为0
-                a.row(k).swap(a.row(i));
+                A.row(k).swap(A.row(i));
                 break;
             }
         }
         //构造矩阵G
-        for (size_t j = i + 1; j < a.rows(); ++j)
+        for (size_t j = i + 1; j < A.rows(); ++j)
         {
             //计算a, b, c
-            G(i, j) = -a(j, i - 1) / a(i, i - 1);
+            G(i, j) = -A(j, i - 1) / A(i, i - 1);
             G_(i, j) = -G(i, j);
         }
-        a = G * a * G_;
+        A = (G * A * G_).eval();
     }
 }

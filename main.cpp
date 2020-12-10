@@ -1,57 +1,64 @@
 #include <iostream>
 #include "math.hpp"
-
+#include <fstream>
 
 void solve(const Matrix<double,Dynamic,Dynamic>& m,const std::string & name){
      /*A*/
     //幂法
+    std::ofstream f("../ans.txt",std::ios::app);
     double pld;
     std::vector<double> env;
     power_eng(m, pld, env);
-    std::cout<<"幂法"<<std::endl;
-    std::cout << name<<"的特征值   " <<pld << std::endl;
-    std::cout << name<<"的特征向量" << std::endl;
+    f<<"幂法"<<std::endl;
+    f << name<<"的特征值   " <<pld << std::endl;
+    f << name<<"的特征向量" << std::endl;
     for (size_t i = 0; i < env.size(); ++i)
     {
-        std::cout << env[i] <<" ";
+        f << env[i] <<" ";
     }
    
-    std::cout<<std::endl;
+    f<<std::endl;
 
+    //jacobi
     env.clear();
     jacobi_eng(m,env);
-    std::cout<<"jacobi"<<std::endl;
-    std::cout << name<<"的特征值" << std::endl;
+    f<<"jacobi"<<std::endl;
+    f << name<<"的特征值" << std::endl;
     sort(env.begin(),env.end());
     for (size_t i = 0; i < env.size(); ++i)
     {
-        std::cout << env[i] <<" ";
+        f << env[i] <<" ";
     }
-    std::cout << std::endl;
+    f << std::endl;
     env.clear();
+
+    //无移动qr
     unshifted_qr(m,env);
-    std::cout<<"无移动QR"<<std::endl;
-    std::cout <<name<<"的特征值" << std::endl;
+    f<<"无移动QR"<<std::endl;
+    f <<name<<"的特征值" << std::endl;
     sort(env.begin(),env.end());
     for (size_t i = 0; i < env.size(); ++i)
     {
-        std::cout << env[i] <<" ";
+        f << env[i] <<" ";
     }
 
-    std::cout<<std::endl;
+    f<<std::endl;
     env.clear();
+
+    //移动qr
     std::vector<std::complex<double>> env1;
     shifted_qr(m,env1);
-    std::cout<<"移动QR"<<std::endl;
-        std::cout << name<<"的特征值" << std::endl;
+    f<<"移动QR"<<std::endl;
+        f << name<<"的特征值" << std::endl;
     sort(env1.begin(),env1.end(),[](const std::complex<double>& a,const std::complex<double>& b){return a.real()<b.real();});
     for (size_t i = 0; i < env1.size(); ++i)
     {
-        std::cout << env1[i] <<" ";
+       f << env1[i] <<" ";
     }
-    std::cout<<std::endl;
+    f<<std::endl;
 
-    std::cout<<std::endl;
+    //gauss_hessen(m);
+    f<< std::endl;
 }
 
 
@@ -100,7 +107,7 @@ int main()
     {
         for (int j = 0; j < 20; j++)
         {
-            D(i, j) = sqrt(2.0f / 21.0f) * sin((double)i * j * acos(-1.0) / 21);
+            D(i, j) = sqrt(2.0f / 21.0f) * sin((double)(i+1) * (j+1) * acos(-1.0) / 21);
         }
     }
 
