@@ -126,11 +126,11 @@ int main()
         }
     }
 
-    // solve(A, "A");
-    //  solve(B, "B");
-    //   solve(C, "C");
+    solve(A, "A");
+     solve(B, "B");
+      solve(C, "C");
        solve(D, "D");
-      //  solve(E, "E");
+       solve(E, "E");
     // std::ofstream f("../hs.txt");
     // HessenbergDecomposition< Matrix<double, 8, 8>> hsA(A);
     // f<<std::endl<<"A"<<std::endl<<hsA.matrixH()<<std::endl;

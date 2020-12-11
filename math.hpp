@@ -252,6 +252,7 @@ Matrix<double, Dynamic, Dynamic> gauss_hessen(const Matrix<double, Dynamic, Dyna
                 if (k != i)
                 {
                     A.row(k).swap(A.row(i));
+                    A.col(k).swap(A.col(i));
                 }
 
                 pass = false;
