@@ -1,6 +1,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <map>
 #include <vector>
+#include <fstream>
 
 using namespace Eigen;
 
@@ -136,7 +137,7 @@ bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
         R = qr.matrixQR().triangularView<Eigen::Upper>();
         Q = qr.householderQ();
         //迭代
-       // Qbar = Qbar * Q;
+        // Qbar = Qbar * Q;
     }
     //特征值位于对角线上
     MatrixXd lam = R * Q;
@@ -215,30 +216,75 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
 }
 
 //高斯-海森伯格
-Matrix<double,Dynamic,Dynamic> gauss_hessen(const Matrix<double,Dynamic,Dynamic> &a)
+Matrix<double, Dynamic, Dynamic> gauss_hessen(const Matrix<double, Dynamic, Dynamic> &a)
 {
-    Matrix<double, Dynamic, Dynamic> A = a;
-    //从第二列开始，到倒数第二行结束
-    for (size_t i = 1; i < A.rows() - 1; ++i)
+    std::ofstream f("../123.txt");
+    int cols = a.cols();
+    int rows = a.rows();
+    Matrix<double, Dynamic, Dynamic> A;
+    A.resize(rows, cols);
+    A = a;
+    f << std::endl
+      << "初始A" << std::endl
+      << A << std::endl;
+    //从第二列开始，到倒数第二列结束
+    for (size_t i = 1; i < A.cols(); ++i)
     {
-        MatrixXd G = MatrixXd::Identity(A.rows(), A.rows());
-        MatrixXd G_ = MatrixXd::Identity(A.rows(), A.rows());
-        for (size_t k = i; k < A.rows(); ++k)
+        MatrixXd G = MatrixXd::Identity(A.cols(), A.cols());
+        MatrixXd G_ = MatrixXd::Identity(A.cols(), A.cols());
+        f << std::endl
+          << "i: " << i << std::endl;
+        f << std::endl
+          << "交换A下面元素前" << std::endl
+          << A << std::endl;
+        //  f<<std::endl<<"交换A下面元素前"<<std::endl<<A<<std::endl;
+        bool pass = true;
+
+        for (size_t k = i; k < A.cols(); ++k)
         {
-            if (a(k, k - 1) != 0)
+            if (A(k, i - 1) > tol)
             {
-                //保证a(i,i-1)不为0
-                A.row(k).swap(A.row(i));
+                //交换row(k)和row(i)
+                // auto t1=A.row(k);
+                // auto t2=A.row(i);
+                // A.row(k)=t2;
+                // A.row(i)=t1;
+                if (k != i)
+                {
+                    A.row(k).swap(A.row(i));
+                }
+
+                pass = false;
                 break;
             }
         }
+        //下面全为0
+        if (pass)
+            continue;
+        //保证A(i,i-1)不为0
+        f << std::endl
+          << "交换A下面元素后" << std::endl
+          << A << std::endl;
         //构造矩阵G
         for (size_t j = i + 1; j < A.rows(); ++j)
         {
+            //  f<<std::endl<<"G"<<G<<std::endl;
             //计算a, b, c
-            G(i, j) = -A(j, i - 1) / A(i, i - 1);
-            G_(i, j) = -G(i, j);
+            G(j, i) = -A(j, i - 1) / A(i, i - 1);
+            //   f<<std::endl<<"G"<<"G"<<std::endl<<G<<std::endl;
+
+            //  f<<std::endl<<"G"<<G_<<std::endl;
+            G_(j, i) = -G(j, i);
+            //    f<<std::endl<<"G_"<<std::endl<<G_<<std::endl;
         }
+        f << std::endl
+          << "G" << G << std::endl;
+        f << std::endl
+          << "G_" << std::endl
+          << G_ << std::endl;
         A = (G * A * G_).eval();
+        // f<<std::endl<<"一次变化后A"<<std::endl<<A<<std::endl;
     }
+    f.close();
+    return A;
 }
