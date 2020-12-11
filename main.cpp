@@ -131,6 +131,33 @@ int main()
       solve(C, "C");
        solve(D, "D");
        solve(E, "E");
+
+ std::ofstream f("../norm.txt");
+        EigenSolver<MatrixXd> esa(A);
+      f<<std::endl<<"A"<<std::endl;
+       f<<std::endl<<esa.eigenvalues()<<std::endl;
+       f<<std::endl<<esa.eigenvectors() <<std::endl;
+
+            EigenSolver<MatrixXd> esb(B);
+   f<<std::endl<<"B"<<std::endl;
+       f<<std::endl<<esb.eigenvalues()<<std::endl;
+       f<<std::endl<<esb.eigenvectors() <<std::endl;
+
+            EigenSolver<MatrixXd> esc(C);
+      f<<std::endl<<"C"<<std::endl;
+       f<<std::endl<<esc.eigenvalues()<<std::endl;
+       f<<std::endl<<esc.eigenvectors() <<std::endl;
+
+            EigenSolver<MatrixXd> esd(D);
+      f<<std::endl<<"D"<<std::endl;
+       f<<std::endl<<esd.eigenvalues()<<std::endl;
+       f<<std::endl<<esd.eigenvectors() <<std::endl;
+
+            EigenSolver<MatrixXd> ese(E);
+        f<<std::endl<<"E"<<std::endl;
+       f<<std::endl<<ese.eigenvalues()<<std::endl;
+       f<<std::endl<<ese.eigenvectors() <<std::endl;
+       f.close();
     // std::ofstream f("../hs.txt");
     // HessenbergDecomposition< Matrix<double, 8, 8>> hsA(A);
     // f<<std::endl<<"A"<<std::endl<<hsA.matrixH()<<std::endl;
