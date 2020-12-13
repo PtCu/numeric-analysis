@@ -1,66 +1,74 @@
 #include <iostream>
 #include "math.hpp"
 #include <fstream>
+#include <time.h>
+#include <sys/time.h>
 
-void solve(const Matrix<double,Dynamic,Dynamic>& m,const std::string & name){
-     /*A*/
+void solve(const Matrix<double, Dynamic, Dynamic> &m, const std::string &name)
+{
     //幂法
-    std::ofstream f("../ans.txt",std::ios::app);
+    std::ofstream f("../ans.txt", std::ios::app); //输出文件
     double pld;
     std::vector<double> env;
+    struct timeval tv;
+    long long start, end;
+    gettimeofday(&tv, NULL);
+    start = tv.tv_sec * 1000 + tv.tv_usec / 1000;
     power_eng(m, pld, env);
-    f<<"幂法"<<std::endl;
-    f << name<<"的特征值   " <<pld << std::endl;
-    f << name<<"的特征向量" << std::endl;
+    gettimeofday(&tv, NULL);
+    end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    f << "幂法" << std::endl;
+    f << name << "的最大特征值   " << pld << std::endl;
+    f << name << "的对应的特征向量" << std::endl;
+    VectorXd x;
+    x.resize(env.size());
     for (size_t i = 0; i < env.size(); ++i)
     {
-        f << env[i] <<" ";
+        f << env[i] << " ";
+        x(i) = env[i];
     }
-   
-    f<<std::endl;
+    f << "运行时间" << end - start << "ms" << std::endl;
+    f << "误差" << (m * x - pld * x).squaredNorm() / x.squaredNorm() << std::endl;
+
+    f << std::endl;
 
     //jacobi
     env.clear();
-    jacobi_eng(m,env);
-    f<<"jacobi"<<std::endl;
-    f << name<<"的特征值" << std::endl;
-    sort(env.begin(),env.end());
+    gettimeofday(&tv, NULL);
+    start = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    jacobi_eng(m, env);
+    gettimeofday(&tv, NULL);
+    end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    f << "jacobi" << std::endl;
+    f << name << "的特征值" << std::endl;
+
+    sort(env.begin(), env.end());
     for (size_t i = 0; i < env.size(); ++i)
     {
-        f << env[i] <<" ";
+        f << env[i] << " ";
     }
+    f << "运行时间" << end - start << "ms" << std::endl;
     f << std::endl;
-    env.clear();
-
-    //无移动qr
-    unshifted_qr(m,env);
-    f<<"无移动QR"<<std::endl;
-    f <<name<<"的特征值" << std::endl;
-    sort(env.begin(),env.end());
-    for (size_t i = 0; i < env.size(); ++i)
-    {
-        f << env[i] <<" ";
-    }
-
-    f<<std::endl;
-    env.clear();
 
     //移动qr
     std::vector<std::complex<double>> env1;
-    shifted_qr(m,env1);
-    f<<"移动QR"<<std::endl;
-        f << name<<"的特征值" << std::endl;
-    sort(env1.begin(),env1.end(),[](const std::complex<double>& a,const std::complex<double>& b){return a.real()<b.real();});
+    gettimeofday(&tv, NULL);
+    start = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    shifted_qr(m, env1);
+    gettimeofday(&tv, NULL);
+    end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    f << "移动QR" << std::endl;
+    f << name << "的特征值" << std::endl;
+    sort(env1.begin(), env1.end(), [](const std::complex<double> &a, const std::complex<double> &b) { return a.real() < b.real(); });
     for (size_t i = 0; i < env1.size(); ++i)
     {
-       f << env1[i] <<" ";
+        f << env1[i] << " ";
     }
-    f<<std::endl;
+    f << "运行时间" << end - start << "ms" << std::endl;
+    f << std::endl;
+    env1.clear();
 
-    f<<"hessen_berg形式"<<std::endl<<gauss_hessen(m);
-    f<< std::endl;
 }
-
 
 int main()
 {
@@ -107,7 +115,7 @@ int main()
     {
         for (int j = 0; j < 20; j++)
         {
-            D(i, j) = sqrt(2.0f / 21.0f) * sin((double)(i+1) * (j+1) * acos(-1.0) / 21);
+            D(i, j) = sqrt(2.0f / 21.0f) * sin((double)(i + 1) * (j + 1) * acos(-1.0) / 21);
         }
     }
 
@@ -125,55 +133,31 @@ int main()
                 E(i, j) = 0;
         }
     }
+    Matrix<double, 10, 10> F;
+    F << -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
 
     solve(A, "A");
-     solve(B, "B");
-      solve(C, "C");
-       solve(D, "D");
-       solve(E, "E");
+    solve(B, "B");
+    solve(C, "C");
+    solve(D, "D");
+    solve(E, "E");
 
- std::ofstream f("../norm.txt");
-        EigenSolver<MatrixXd> esa(A);
-      f<<std::endl<<"A"<<std::endl;
-       f<<std::endl<<esa.eigenvalues()<<std::endl;
-       f<<std::endl<<esa.eigenvectors() <<std::endl;
-
-            EigenSolver<MatrixXd> esb(B);
-   f<<std::endl<<"B"<<std::endl;
-       f<<std::endl<<esb.eigenvalues()<<std::endl;
-       f<<std::endl<<esb.eigenvectors() <<std::endl;
-
-            EigenSolver<MatrixXd> esc(C);
-      f<<std::endl<<"C"<<std::endl;
-       f<<std::endl<<esc.eigenvalues()<<std::endl;
-       f<<std::endl<<esc.eigenvectors() <<std::endl;
-
-            EigenSolver<MatrixXd> esd(D);
-      f<<std::endl<<"D"<<std::endl;
-       f<<std::endl<<esd.eigenvalues()<<std::endl;
-       f<<std::endl<<esd.eigenvectors() <<std::endl;
-
-            EigenSolver<MatrixXd> ese(E);
-        f<<std::endl<<"E"<<std::endl;
-       f<<std::endl<<ese.eigenvalues()<<std::endl;
-       f<<std::endl<<ese.eigenvectors() <<std::endl;
-       f.close();
-    // std::ofstream f("../hs.txt");
-    // HessenbergDecomposition< Matrix<double, 8, 8>> hsA(A);
-    // f<<std::endl<<"A"<<std::endl<<hsA.matrixH()<<std::endl;
-
-    // HessenbergDecomposition< Matrix<double, 10, 10>> hsB(B);
-    // f<<std::endl<<"B"<<std::endl<<hsB.matrixH()<<std::endl;
-
-    // HessenbergDecomposition< Matrix<double, 12, 12>> hsC(C);
-    // f<<std::endl<<"C"<<std::endl<<hsC.matrixH()<<std::endl;
-
-    // HessenbergDecomposition< Matrix<double, 20, 20>> hsD(D);
-    // f<<std::endl<<"D"<<std::endl<<hsD.matrixH()<<std::endl;
-
-    // HessenbergDecomposition< Matrix<double, 50, 50>> hsE(E);
-    // f<<std::endl<<"E"<<std::endl<<hsE.matrixH()<<std::endl;
-
+    std::ofstream f("../ans.txt", std::ios::app);
+    std::vector<std::complex<double>> env1;
+    shifted_qr(F,env1);
+    sort(env1.begin(), env1.end(), [](const std::complex<double> &a, const std::complex<double> &b) { return a.real() < b.real(); });
+    for (size_t i = 0; i < env1.size(); ++i)
+    {
+        f << env1[i] << " ";
+    }
     return 0;
 }
-  

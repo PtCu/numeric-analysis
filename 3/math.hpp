@@ -6,15 +6,15 @@
 using namespace Eigen;
 
 const int iter = 1000;
-const double tol = 1e-14;
-bool power_eng(const MatrixXd &a, double &pld, std::vector<double> &env)
+const double tol = 1e-10;
+void power_eng(const MatrixXd &a, double &pld, std::vector<double> &env)
 {
     MatrixXd A = MatrixXd(a);
     VectorXd u = VectorXd::Random(a.rows());
     VectorXd v = VectorXd(u);
     for (size_t j = 1; j <= iter; ++j)
     {
-        v = u / u.lpNorm<Infinity>();
+        v = u / u.lpNorm<Infinity>(); //利用无穷范数进行归一化
         u = A * v;
     }
     for (size_t i = 0; i < v.size(); ++i)
@@ -23,16 +23,33 @@ bool power_eng(const MatrixXd &a, double &pld, std::vector<double> &env)
     }
     //env = v;
     pld = u.lpNorm<Infinity>();
+    /*
+      MatrixXd A = MatrixXd(a);
+    VectorXd u = VectorXd::Random(a.rows());
+    for (size_t j = 1; j <= iter; ++j)
+    {
+        u = A * u;
+        u = u / u.squaredNorm();
+       
+    }
+    for (size_t i = 0; i < u.size(); ++i)
+    {
+        env.push_back(u(i));
+    }
+    //env = v;
+    auto x = u.transpose()*A*u *(u.transpose()*u).inverse(); //瑞利商
+    pld = x(0);
+    */
 }
 
-bool inv_power_eng(const MatrixXd &a, std::vector<double> &env, double &pld)
+void inv_power_eng(const MatrixXd &a, std::vector<double> &env, double &pld)
 {
     MatrixXd A = MatrixXd(a);
     VectorXd u = VectorXd::Random(a.rows());
     VectorXd v = VectorXd(u);
     for (size_t j = 1; j <= iter; ++j)
     {
-        v = u / u.lpNorm<Infinity>();
+        v = u / u.lpNorm<Infinity>(); 
         u = A.inverse() * v;
     }
     for (size_t i = 0; i < v.size(); ++i)
@@ -122,7 +139,7 @@ bool jacobi_eng(const MatrixXd &a, std::vector<double> &ev)
 }
 
 //无移动qr
-bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
+void unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
 {
     ev.resize(a.cols());
     MatrixXd Q = MatrixXd::Identity(a.cols(), a.cols());
@@ -151,7 +168,7 @@ bool unshifted_qr(const MatrixXd &a, std::vector<double> &ev)
 //高斯-海森伯格
 Matrix<double, Dynamic, Dynamic> gauss_hessen(const Matrix<double, Dynamic, Dynamic> &a)
 {
-    std::ofstream f("../hs_record.txt");
+    std::ofstream f("../hs_record.txt", std::ios::app);
     int cols = a.cols();
     int rows = a.rows();
     Matrix<double, Dynamic, Dynamic> A;
@@ -161,16 +178,10 @@ Matrix<double, Dynamic, Dynamic> gauss_hessen(const Matrix<double, Dynamic, Dyna
       << "初始A" << std::endl
       << A << std::endl;
     //从第二列开始，到倒数第二列结束
-    for (size_t i = 1; i < A.cols()-1; ++i)
+    for (size_t i = 1; i < A.cols() - 1; ++i)
     {
         MatrixXd G = MatrixXd::Identity(A.cols(), A.cols());
         MatrixXd G_ = MatrixXd::Identity(A.cols(), A.cols());
-        f << std::endl
-          << "i: " << i << std::endl;
-        f << std::endl
-          << "交换A下面元素前" << std::endl
-          << A << std::endl;
-        //  f<<std::endl<<"交换A下面元素前"<<std::endl<<A<<std::endl;
         // bool pass = true;
 
         // for (size_t k = i; k < A.cols(); ++k)
@@ -188,52 +199,42 @@ Matrix<double, Dynamic, Dynamic> gauss_hessen(const Matrix<double, Dynamic, Dyna
         //         break;
         //     }
         // }
-        // //下面全为0
+        //下面全为0
         // if (pass)
         //     continue;
         //保证A(i,i-1)不为0
-        f << std::endl
-          << "交换A下面元素后" << std::endl
-          << A << std::endl;
         //构造矩阵G
+        double some = 1;
+        for (size_t k = i; k < A.rows(); ++k)
+        {
+            if (A(k, i - 1) != 0)
+            {
+                some = A(k, i - 1);
+                break;
+            }
+        }
         for (size_t j = i + 1; j < A.rows(); ++j)
         {
-            //  f<<std::endl<<"G"<<G<<std::endl;
             //计算a, b, c
-            G(j, i) = -A(j, i - 1) / A(i, i - 1);
-            //   f<<std::endl<<"G"<<"G"<<std::endl<<G<<std::endl;
-
-            //  f<<std::endl<<"G"<<G_<<std::endl;
+            G(j, i) = -A(j, i - 1) / some;
             G_(j, i) = -G(j, i);
-            //    f<<std::endl<<"G_"<<std::endl<<G_<<std::endl;
         }
-        f << std::endl
-          << "G" << G << std::endl;
-        f << std::endl
-          << "G_" << std::endl
-          << G_ << std::endl;
-        A = (G * A * G_).eval();
-        // f<<std::endl<<"一次变化后A"<<std::endl<<A<<std::endl;
+        A = G * A.*G_;
     }
-    f.close();
     return A;
 }
 //平移QR法
 //计算方阵的实数和复数特征值
-bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
+void shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
 {
-
     ev.resize(a.cols());
 
-    int kounttol = 500;
+    //最大迭代次数
+    int kounttol = 1000;
     //行数
     int m = a.rows();
     int n = m;
     MatrixXcd A = gauss_hessen(a);
-    //  HessenbergDecomposition< MatrixXd> hs(a);
-    // // f<<std::endl<<"E"<<std::endl<<hsE.matrixH()<<std::endl;
-    // MatrixXcd A=hs.matrixH();
-    //MatrixXcd A=MatrixXd(a);
     HouseholderQR<MatrixXcd> qr;
     while (n > 1)
     {
@@ -247,7 +248,6 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
                 _max = abs(A(n - 1, i));
             }
         }
-        // auto _A = A.block(n - 1, 0, 1, n - 1).cwiseAbs().maxCoeff();
         while ((kount < kounttol) && _max > tol)
         {
             //记录QR的个数
@@ -268,12 +268,14 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
                 }
             }
         }
+        //具有分离的1*1的块
         if (kount < kounttol)
         {
-            ev[n - 1] = a(n - 1, n - 1);
+            ev[n - 1] = (A(n - 1, n - 1));
             --n;
             A = A.block(0, 0, n, n).eval();
         }
+        //存在复数根
         else
         {
             std::complex<double> disc = (A(n - 2, n - 2) - A(n - 1, n - 1)) * (A(n - 2, n - 2) - A(n - 1, n - 1)) + 4.0 * (A(n - 1, n - 2) * A(n - 2, n - 1));
@@ -286,5 +288,3 @@ bool shifted_qr(const MatrixXd &a, std::vector<std::complex<double>> &ev)
     if (n > 0)
         ev[0] = A(0, 0);
 }
-
-
